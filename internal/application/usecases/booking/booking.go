@@ -220,24 +220,39 @@ func (b *Booking) Expire(ctx context.Context, id string) error {
 }
 
 func (b *Booking) GetBooking(ctx context.Context, bookingID string) (*query.BookingResult, error) {
-	booking, err := b.bookingRepo.GetBooking(ctx, bookingID)
-	if err != nil {
-		return nil, fmt.Errorf("[%s] get booking error  %w", op, err)
-	}
+	var bookingSnap domain.BookingSnapshot
+	err := b.tx.Run(ctx, func(ctx context.Context) error {
+		booking, err := b.bookingRepo.GetBooking(ctx, bookingID)
+		if err != nil {
+			return fmt.Errorf("[%s] get booking error  %w", op, err)
+		}
 
-	return DomainToResult(booking.Snapshot()), nil
+		bookingSnap = booking.Snapshot()
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return DomainToResult(bookingSnap), nil
 }
 
 func (b *Booking) GetExpiredBooking(ctx context.Context) (query.BookingsResult, error) {
 	var bookingSnap []domain.BookingSnapshot
 
-	bookings, err := b.bookingRepo.GetExpiredBookings(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("[%s] get expired bookings error:  %w", op, err)
-	}
+	err := b.tx.Run(ctx, func(ctx context.Context) error {
+		bookings, err := b.bookingRepo.GetExpiredBookings(ctx)
+		if err != nil {
+			return fmt.Errorf("[%s] get expired bookings error:  %w", op, err)
+		}
 
-	for _, booking := range bookings {
-		bookingSnap = append(bookingSnap, booking.Snapshot())
+		for _, booking := range bookings {
+			bookingSnap = append(bookingSnap, booking.Snapshot())
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	res := DomainsToResult(bookingSnap)
