@@ -33,7 +33,7 @@ type CacheConfig struct {
 type BrokerConfig struct {
 	Address        string `env:"KAFKA_BROKERS"`
 	Host           string `env:"KAFKA_HOST" env-default:"localhost"`
-	Port           string `env:"KAFKA_PORT" env-default:"9092"`
+	Port           string `env:"KAFKA_PORT" env-default:"9093"`
 	Topic          string `env:"KAFKA_TOPIC" env-default:"booking-events"`
 	MaxRetry       int    `env:"KAFKA_MAX_RETRY" env-default:"3"`
 	Backoff        int64  `env:"KAFKA_BACKOFF_SECONDS" env-default:"1"`

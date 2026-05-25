@@ -20,7 +20,7 @@ type Event struct {
 	EventType   EventType
 	Payload     []byte
 	CreatedAt   time.Time
-	ProcessedAt time.Time
+	ProcessedAt *time.Time
 }
 
 func NewEvent(AggregateID string, Type EventType, Payload []byte) *Event {

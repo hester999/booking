@@ -64,7 +64,7 @@ func main() {
 
 	bookingRouter := router.NewRouter(bookingHandler)
 
-	if err := runServer(bookingRouter, cfg, database, checker, logger); err != nil {
+	if err := runServer(bookingRouter, cfg, database, checker, logger, redisClient); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -75,9 +75,13 @@ func runServer(
 	database *sqlx.DB,
 	checker *expiredchecker.ExpiredChecker,
 	logger pkg.Logger,
+	redisClient *redis.RedisClient,
 ) error {
 	defer func() {
 		if err := database.Close(); err != nil {
+			logger.Error("database close failed", "error", err)
+		}
+		if err := redisClient.Client.Close(); err != nil {
 			logger.Error("database close failed", "error", err)
 		}
 	}()

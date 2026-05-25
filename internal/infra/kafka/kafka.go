@@ -4,7 +4,7 @@ import (
 	"booking/internal/config"
 	"booking/pkg"
 	"context"
-	"strings"
+	"net"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -16,7 +16,7 @@ type Producer struct {
 	logger   pkg.Logger
 }
 
-func New(address string, producerConfig config.BrokerConfig, logger pkg.Logger) (*Producer, error) {
+func NewKafkaProducer(producerConfig config.BrokerConfig, logger pkg.Logger) (*Producer, error) {
 
 	cfg := sarama.NewConfig()
 	cfg.Producer.Return.Successes = true                                             // возвращает подтверждение об удачной отправке, обязателен для sync
@@ -27,7 +27,12 @@ func New(address string, producerConfig config.BrokerConfig, logger pkg.Logger) 
 	cfg.Net.MaxOpenRequests = producerConfig.MaxConnections
 	cfg.Producer.Partitioner = sarama.NewHashPartitioner //определяет в какую партицию попадет сообщение
 
-	producer, err := sarama.NewSyncProducer(strings.Split(address, ","), cfg)
+	//producer, err := sarama.NewSyncProducer(strings.Split(address, ","), cfg)
+	brokers := []string{
+		net.JoinHostPort(producerConfig.Host, producerConfig.Port),
+	}
+
+	producer, err := sarama.NewSyncProducer(brokers, cfg)
 	if err != nil {
 		return nil, err
 	}
