@@ -1,20 +1,26 @@
 package cache
 
 import (
+	"booking/internal/config"
 	"booking/internal/domain"
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 type Booking struct {
 	cache *redis.Client
+	ttl   time.Duration
 }
 
-func NewCacheRepo(redisClient *redis.Client) *Booking {
-	return &Booking{cache: redisClient}
+func NewCacheRepo(redisClient *redis.Client, cfg config.CacheConfig) *Booking {
+	return &Booking{
+		cache: redisClient,
+		ttl:   time.Duration(cfg.TTL) * time.Second,
+	}
 }
 
 func (c *Booking) GetBooking(ctx context.Context, id string) (*domain.Booking, error) {
@@ -52,8 +58,7 @@ func (c *Booking) SetBooking(ctx context.Context, booking *domain.Booking) error
 		return err
 	}
 
-	err = c.cache.Set(ctx, booking.ID(), string(payload), 0).Err()
-
+	err = c.cache.Set(ctx, booking.ID(), string(payload), c.ttl).Err()
 	if err != nil {
 		return err
 	}

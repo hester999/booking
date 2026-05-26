@@ -28,6 +28,7 @@ type DataBaseConfig struct {
 type CacheConfig struct {
 	Address  string `env:"CACHE_ADDRESS" env-default:"localhost"`
 	Database string `env:"CACHE_DATABASE" env-default:"0"`
+	TTL      int64  `env:"CACHE_TTL" env-default:"0"`
 }
 
 type BrokerConfig struct {

@@ -4,13 +4,12 @@ import (
 	"booking/apperr"
 	"booking/internal/domain"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	trmsqlx "github.com/avito-tech/go-transaction-manager/drivers/sqlx/v2"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -64,6 +63,9 @@ func (b *Booking) UpdateStatus(ctx context.Context, booking *domain.Booking) (*d
 	err := tx.GetContext(ctx, dto, query, dto.Status, dto.ExpiresAt, dto.ID)
 
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apperr.NotFoundErr
+		}
 		return nil, fmt.Errorf("could not update status: %w", err)
 	}
 
@@ -108,7 +110,7 @@ func (b *Booking) GetBooking(ctx context.Context, id string) (*domain.Booking, e
 	err := tx.GetContext(ctx, &result, query, id)
 
 	if err != nil {
-		if _, ok := errors.AsType[*pgconn.PgError](err); ok {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apperr.NotFoundErr
 		}
 		return nil, fmt.Errorf("could not get booking: %w", err)
@@ -127,13 +129,9 @@ func (b *Booking) GetBookingsByListingID(ctx context.Context, listingID string) 
 
 	query := `select id,user_id,listing_id,date_from,date_to,status,expires_at,created_at,updated_at,total_price from booking where listing_id = $1 and status = 'confirmed'`
 
-	err := tx.GetContext(ctx, &result, query, listingID)
+	err := tx.SelectContext(ctx, &result, query, listingID)
 	if err != nil {
-		if _, ok := errors.AsType[*pgconn.PgError](err); ok {
-			if errors.Is(err, pgx.ErrNoRows) {
-				return nil, apperr.NotFoundErr
-			}
-		}
+		return nil, fmt.Errorf("could not get bookings by listing id: %w", err)
 	}
 
 	var bookings []*domain.Booking
