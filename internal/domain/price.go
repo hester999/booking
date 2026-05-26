@@ -16,8 +16,21 @@ func NewTotalPrice(totalPrice string) (Price, error) {
 	if err != nil {
 		return Price{}, err
 	}
-	if price == decimal.Zero || price.IsNegative() {
+	return NewPriceFromDecimal(price)
+}
+
+func NewPriceFromDecimal(price decimal.Decimal) (Price, error) {
+	if price.IsZero() || price.IsNegative() {
 		return Price{}, apperr.InvalidPriceErr
 	}
+
 	return Price{totalPrice: price}, nil
+}
+
+func (p Price) Decimal() decimal.Decimal {
+	return p.totalPrice
+}
+
+func (p Price) String() string {
+	return p.totalPrice.String()
 }

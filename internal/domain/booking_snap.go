@@ -2,6 +2,8 @@ package domain
 
 import (
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type BookingSnapshot struct {
@@ -36,7 +38,11 @@ func (s *BookingSnapshot) RestoreDomain() (*Booking, error) {
 }
 
 func (s *BookingSnapshot) PriceToString() string {
-	return s.TotalPrice.totalPrice.String()
+	return s.TotalPrice.String()
+}
+
+func (s *BookingSnapshot) PriceDecimal() decimal.Decimal {
+	return s.TotalPrice.Decimal()
 }
 
 func (s *BookingSnapshot) StringToDecimal(price string) error {

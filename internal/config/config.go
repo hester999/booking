@@ -15,14 +15,15 @@ type ServerConfig struct {
 }
 
 type DataBaseConfig struct {
-	Address        string `env:"POSTGRES_HOST" env-default:"localhost"`
-	Port           string `env:"POSTGRES_PORT" env-default:"5432"`
-	Database       string `env:"POSTGRES_DB" env-default:"booking"`
-	User           string `env:"POSTGRES_USER" env-default:"admin"`
-	Password       string `env:"POSTGRES_PASSWORD" env-default:"123"`
-	MaxAttempts    int    `env:"MAX_ATTEMPTS" env-default:"1"`
-	Delay          int    `env:"DELAY" env-default:"1"`
-	MaxConnections int    `env:"MAX_CONNECTIONS" env-default:"1"`
+	Address         string `env:"POSTGRES_HOST" env-default:"localhost"`
+	Port            string `env:"POSTGRES_PORT" env-default:"5432"`
+	Database        string `env:"POSTGRES_DB" env-default:"booking"`
+	User            string `env:"POSTGRES_USER" env-default:"admin"`
+	Password        string `env:"POSTGRES_PASSWORD" env-default:"123"`
+	MaxAttempts     int    `env:"MAX_ATTEMPTS" env-default:"1"`
+	Delay           int    `env:"DELAY" env-default:"1"`
+	MaxConnections  int    `env:"MAX_CONNECTIONS" env-default:"1"`
+	MaxIdleLiveTime int64  `env:"MAX_IDLE_LiVE_TIME" env-default:"5"`
 }
 
 type CacheConfig struct {

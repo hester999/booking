@@ -32,6 +32,9 @@ func InitDataBaseConnectionWithConfig(cfg config.DataBaseConfig) (*sqlx.DB, erro
 	}
 
 	database.SetMaxOpenConns(cfg.MaxConnections)
+	database.SetConnMaxIdleTime(time.Duration(cfg.MaxIdleLiveTime) * time.Minute)
+	database.SetMaxIdleConns(5)
+	database.SetConnMaxLifetime(30 * time.Minute)
 	return database, nil
 }
 

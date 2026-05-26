@@ -54,9 +54,9 @@ func main() {
 	pgRepo := pgrepo.NewBookingRepo(database, txGetter)
 	eventRepo := eventrepo.NewEventRepo(database, txGetter)
 
-	cahceRepo := cache.NewCacheRepo(redisClient.Client)
+	cacheRepo := cache.NewCacheRepo(redisClient.Client, cfg.CacheConfig)
 
-	bookingRepo := bookingrepo.NewCachedBookingRepo(pgRepo, cahceRepo, logger)
+	bookingRepo := bookingrepo.NewCachedBookingRepo(pgRepo, cacheRepo, logger)
 
 	bookingUsecase := bookinguc.NewBookingUsecase(bookingRepo, eventRepo, txRunner)
 	bookingHandler := bookinghandler.NewBookingHandler(bookingUsecase, logger)

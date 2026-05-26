@@ -32,6 +32,7 @@ func (b *BookingRepo) GetBooking(ctx context.Context, id string) (*domain.Bookin
 
 	if err != nil {
 		b.log.Error("cache get booking failed", "error", err)
+		err = nil
 	}
 
 	booking, err := b.pg.GetBooking(ctx, id)

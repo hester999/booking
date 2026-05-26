@@ -18,7 +18,7 @@ func domainBookingToDB(booking *domain.Booking) *BookingRepository {
 		ExpiresAt:  snap.ExpiredAt,
 		CreatedAt:  snap.CreatedAt,
 		UpdatedAt:  snap.UpdatedAt,
-		TotalPrice: snap.PriceToString(),
+		TotalPrice: snap.PriceDecimal(),
 	}
 }
 
@@ -27,21 +27,25 @@ func repoModelToDomain(result *BookingRepository) (*domain.Booking, error) {
 	if err != nil {
 		return nil, apperr.InvalidStatusErr
 	}
-	snapBooking := domain.BookingSnapshot{
-		ID:        result.ID,
-		UserID:    result.UserID,
-		ListingID: result.ListingID,
-		DateFrom:  result.DateFrom,
-		DateTo:    result.DateTo,
-		Status:    convertedStatus,
-		ExpiredAt: result.ExpiresAt,
-		CreatedAt: result.CreatedAt,
-		UpdatedAt: result.UpdatedAt,
-	}
-	err = snapBooking.StringToDecimal(result.TotalPrice)
+
+	price, err := domain.NewPriceFromDecimal(result.TotalPrice)
 	if err != nil {
 		return nil, err
 	}
+
+	snapBooking := domain.BookingSnapshot{
+		ID:         result.ID,
+		UserID:     result.UserID,
+		ListingID:  result.ListingID,
+		DateFrom:   result.DateFrom,
+		DateTo:     result.DateTo,
+		Status:     convertedStatus,
+		ExpiredAt:  result.ExpiresAt,
+		CreatedAt:  result.CreatedAt,
+		UpdatedAt:  result.UpdatedAt,
+		TotalPrice: price,
+	}
+
 	restoreBooking, err := snapBooking.RestoreDomain()
 	if err != nil {
 		return nil, err
