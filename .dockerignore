@@ -1,0 +1,7 @@
+.git
+.gitignore
+.idea
+bin
+.env
+.env.docker
+*.log
