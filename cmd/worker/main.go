@@ -6,7 +6,6 @@ import (
 	"booking/internal/infra/background/producer"
 	"booking/internal/infra/db"
 	"booking/internal/infra/kafka"
-	"booking/internal/infra/redis"
 	eventrepo "booking/internal/infra/repository/postgres/event"
 	"booking/internal/infra/txmanager"
 	"booking/pkg"
@@ -31,10 +30,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	redisClient, err := redis.NewRedisClient(cfg.CacheConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	txFactory := trmsqlx.NewDefaultFactory(database)
 	txManager := manager.Must(txFactory)
@@ -46,13 +41,16 @@ func main() {
 	eventUsecases := event.NewEventUsecases(txRunner, eventRepo)
 
 	kafkaProd, err := kafka.NewKafkaProducer(cfg.BrokerConfig, logger)
-	producer := producer.NewProducer(kafkaProd, eventUsecases, logger, cfg.InfraConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+	outboxProducer := producer.NewProducer(kafkaProd, eventUsecases, logger, cfg.InfraConfig)
 
 	defer func() {
-		if err := database.Close(); err != nil {
-			logger.Error("database close failed", "error", err)
+		if err := kafkaProd.Close(); err != nil {
+			logger.Error("kafka producer close failed", "error", err)
 		}
-		if err := redisClient.Client.Close(); err != nil {
+		if err := database.Close(); err != nil {
 			logger.Error("database close failed", "error", err)
 		}
 	}()
@@ -60,8 +58,8 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	go runBackground(ctx, stop, logger, "producer", producer.Start)
-	go logBackgroundErrors(ctx, logger, "producer", producer.GetErrChan())
+	go runBackground(ctx, stop, logger, "producer", outboxProducer.Start)
+	go logBackgroundErrors(ctx, logger, "producer", outboxProducer.GetErrChan())
 
 	select {
 	case <-ctx.Done():

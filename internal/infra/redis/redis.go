@@ -28,3 +28,10 @@ func NewRedisClient(cfg config.CacheConfig) (*RedisClient, error) {
 		Client: client,
 	}, nil
 }
+
+func (r *RedisClient) Close() error {
+	if r == nil || r.Client == nil {
+		return nil
+	}
+	return r.Client.Close()
+}

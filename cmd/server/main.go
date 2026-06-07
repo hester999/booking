@@ -81,8 +81,8 @@ func runServer(
 		if err := database.Close(); err != nil {
 			logger.Error("database close failed", "error", err)
 		}
-		if err := redisClient.Client.Close(); err != nil {
-			logger.Error("database close failed", "error", err)
+		if err := redisClient.Close(); err != nil {
+			logger.Error("redis close failed", "error", err)
 		}
 	}()
 

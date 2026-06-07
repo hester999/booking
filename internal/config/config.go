@@ -23,7 +23,7 @@ type DataBaseConfig struct {
 	MaxAttempts     int    `env:"MAX_ATTEMPTS" env-default:"1"`
 	Delay           int    `env:"DELAY" env-default:"1"`
 	MaxConnections  int    `env:"MAX_CONNECTIONS" env-default:"1"`
-	MaxIdleLiveTime int64  `env:"MAX_IDLE_LiVE_TIME" env-default:"5"`
+	MaxIdleLiveTime int64  `env:"MAX_IDLE_LIVE_TIME" env-default:"5"`
 }
 
 type CacheConfig struct {

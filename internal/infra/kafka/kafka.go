@@ -4,7 +4,7 @@ import (
 	"booking/internal/config"
 	"booking/pkg"
 	"context"
-	"net"
+	"strings"
 	"time"
 
 	"github.com/IBM/sarama"
@@ -27,12 +27,7 @@ func NewKafkaProducer(producerConfig config.BrokerConfig, logger pkg.Logger) (*P
 	cfg.Net.MaxOpenRequests = producerConfig.MaxConnections
 	cfg.Producer.Partitioner = sarama.NewHashPartitioner //определяет в какую партицию попадет сообщение
 
-	//producer, err := sarama.NewSyncProducer(strings.Split(address, ","), cfg)
-	brokers := []string{
-		net.JoinHostPort(producerConfig.Host, producerConfig.Port),
-	}
-
-	producer, err := sarama.NewSyncProducer(brokers, cfg)
+	producer, err := sarama.NewSyncProducer(strings.Split(producerConfig.Address, ","), cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +47,12 @@ func (p *Producer) SendEvent(ctx context.Context, event []byte) error {
 	}
 	_, _, err := p.producer.SendMessage(msg)
 	if err != nil {
-		p.logger.Error("Failed to send event to Kafka: %w", err)
+		p.logger.Error("failed to send event to Kafka", "error", err)
+		return err
 	}
 	return nil
+}
+
+func (p *Producer) Close() error {
+	return p.producer.Close()
 }
