@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package listing;
+
+option go_package = "booking/internal/proto/listing;listingpb";
+
+service ListingService {
+  rpc GetListing(ListingRequest) returns (ListingResponse);
+}
+
+
+message  ListingResponse{
+  string id  = 1;
+  string price = 3;
+  int64 minimum_booking_duration = 4;
+
+}
+
+message ListingRequest {
+  string  id = 1;
+}
+
