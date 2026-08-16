@@ -12,6 +12,7 @@ type bookingRepository interface {
 	GetExpiredBookings(ctx context.Context) ([]*domain.Booking, error)
 	HasOverlappingBooking(ctx context.Context, booking *domain.Booking) (bool, error)
 	GetBookingsByListingID(ctx context.Context, listingID string) ([]*domain.Booking, error)
+	LockListing(ctx context.Context, listingID string) error
 }
 
 type bookingCache interface {

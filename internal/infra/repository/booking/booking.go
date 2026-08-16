@@ -72,3 +72,7 @@ func (b *BookingRepo) GetBookingsByListingID(ctx context.Context, listingID stri
 func (b *BookingRepo) HasOverlappingBooking(ctx context.Context, booking *domain.Booking) (bool, error) {
 	return b.pg.HasOverlappingBooking(ctx, booking)
 }
+
+func (b *BookingRepo) LockListing(ctx context.Context, listingID string) error {
+	return b.pg.LockListing(ctx, listingID)
+}

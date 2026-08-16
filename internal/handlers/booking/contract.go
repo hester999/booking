@@ -12,5 +12,6 @@ type booking interface {
 	Cancel(ctx context.Context, cancelBookingCommand command.CancelBookingCommand) error
 	//Expire(ctx context.Context, id string) error
 	GetBooking(ctx context.Context, bookingID string) (*query.BookingResult, error)
+
 	//GetExpiredBooking(ctx context.Context) (query.BookingsResult, error)
 }

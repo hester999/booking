@@ -26,7 +26,7 @@ func NewRouter(bookingHandler *booking.BookingHandler) *mux.Router {
 
 	api := router.PathPrefix("/api/v1").Subrouter()
 	api.HandleFunc("/booking", bookingHandler.Create).Methods(POST)
-	api.HandleFunc("/booking/{id}/confirm", bookingHandler.Confirm).Methods(POST)
+	api.HandleFunc("/booking/{id}/confirm", bookingHandler.Confirm).Methods(POST) //todo мокнуть сервис оплаты
 	api.HandleFunc("/booking/{id}/cancel", bookingHandler.Cancel).Methods(POST)
 	api.HandleFunc("/booking/{id}", bookingHandler.Get).Methods(GET)
 	return router

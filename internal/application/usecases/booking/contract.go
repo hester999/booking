@@ -2,6 +2,7 @@ package booking
 
 import (
 	"booking/internal/domain"
+	"booking/internal/models"
 	"context"
 )
 
@@ -20,4 +21,9 @@ type bookingRepo interface {
 	GetExpiredBookings(ctx context.Context) ([]*domain.Booking, error)
 	GetBookingsByListingID(ctx context.Context, listingID string) ([]*domain.Booking, error)
 	HasOverlappingBooking(ctx context.Context, booking *domain.Booking) (bool, error)
+	LockListing(ctx context.Context, listingID string) error
+}
+
+type listingGateway interface {
+	GetListing(ctx context.Context, id string) (*models.Listing, error)
 }

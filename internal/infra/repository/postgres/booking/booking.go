@@ -169,3 +169,15 @@ func (b *Booking) HasOverlappingBooking(ctx context.Context, booking *domain.Boo
 
 	return exists, nil
 }
+
+func (b *Booking) LockListing(ctx context.Context, listingID string) error {
+	tx := b.tx.DefaultTrOrDB(ctx, b.db)
+
+	_, err := tx.ExecContext(
+		ctx,
+		`SELECT pg_advisory_xact_lock(hashtext($1))`,
+		listingID,
+	)
+
+	return err
+}

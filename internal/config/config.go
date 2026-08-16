@@ -43,7 +43,8 @@ type BrokerConfig struct {
 }
 
 type InfraConfig struct {
-	Ticker int64 `env:"BACKGROUND_TICKER_SECONDS" env-default:"10"`
+	Ticker            int64  `env:"BACKGROUND_TICKER_SECONDS" env-default:"10"`
+	ListingRPCService string `env:"LISTING_RPC_SERVER" env-default:"localhost:50051"`
 }
 
 type Config struct {

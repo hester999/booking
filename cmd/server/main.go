@@ -24,12 +24,16 @@ import (
 	"booking/internal/infra/txmanager"
 	"booking/pkg"
 
+	listinggateway "booking/internal/gateway/listing"
+	listingclient "booking/internal/infra/rpc/listing"
+
 	trmsqlx "github.com/avito-tech/go-transaction-manager/drivers/sqlx/v2"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 )
 
+// todo подумать над тем, чтобы уйти от http в  booking и перейти на  rpc
 func main() {
 	logger := pkg.NewLogger()
 
@@ -58,7 +62,13 @@ func main() {
 
 	bookingRepo := bookingrepo.NewCachedBookingRepo(pgRepo, cacheRepo, logger)
 
-	bookingUsecase := bookinguc.NewBookingUsecase(bookingRepo, eventRepo, txRunner)
+	listingRPCClient, err := listingclient.NewRpcListingClient(cfg.InfraConfig.ListingRPCService)
+	if err != nil {
+		log.Fatal(err)
+	}
+	listingGateWay := listinggateway.NewListingGateway(listingRPCClient)
+
+	bookingUsecase := bookinguc.NewBookingUsecase(bookingRepo, eventRepo, listingGateWay, txRunner)
 	bookingHandler := bookinghandler.NewBookingHandler(bookingUsecase, logger)
 	checker := expiredchecker.NewExpiredChecker(bookingUsecase, cfg.Ticker, txRunner, logger)
 

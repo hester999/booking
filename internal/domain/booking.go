@@ -4,6 +4,8 @@ import (
 	"booking/apperr"
 	"booking/utils"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type Status string
@@ -63,6 +65,10 @@ func NewBooking(userID string, listingID string, dateFrom, dateTo, expiredAt tim
 
 func (b *Booking) ID() string {
 	return b.id
+}
+
+func (b *Booking) ListingID() string {
+	return b.listingID
 }
 
 func (b *Booking) Snapshot() BookingSnapshot {
@@ -177,13 +183,33 @@ func (b *Booking) CheckIntersection(startDate, endDate time.Time) bool {
 	return !(oldIsAfterNew || oldIsBeforeNew)
 }
 
-func (b *Booking) CalculatePrice(price string) error {
+func (b *Booking) CalculatePrice(price string, minimumBookingDuration int64) error {
+	if minimumBookingDuration <= 0 {
+		return apperr.InvalidPriceErr
+	}
 
-	total, err := NewTotalPrice(price)
+	totalPrice, err := decimal.NewFromString(price) // сразу работаем с decimal
 	if err != nil {
 		return err
 	}
-	b.totalPrice = total
+
+	totalPrice = totalPrice.Mul(decimal.NewFromInt(minimumBookingDuration))
+	b.totalPrice, err = NewTotalPrice(totalPrice.String())
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *Booking) ValidateMinimalBookingDuration(minimumBookingDuration int64) error {
+
+	bookingDuration := b.period.dateTo.Sub(b.period.dateFrom)
+	days := int64(bookingDuration / (24 * time.Hour))
+	if days < minimumBookingDuration {
+		return apperr.InvalidPeriodErr
+
+	}
 	return nil
 }
 

@@ -11,16 +11,18 @@ import (
 )
 
 type Booking struct {
-	tx          tx
-	bookingRepo bookingRepo
-	eventRepo   eventRepo
+	tx             tx
+	bookingRepo    bookingRepo
+	eventRepo      eventRepo
+	listingGateway listingGateway
 }
 
-func NewBookingUsecase(bookingRepo bookingRepo, eventRepo eventRepo, tx tx) *Booking {
+func NewBookingUsecase(bookingRepo bookingRepo, eventRepo eventRepo, listingGateway listingGateway, tx tx) *Booking {
 	return &Booking{
-		bookingRepo: bookingRepo,
-		eventRepo:   eventRepo,
-		tx:          tx,
+		bookingRepo:    bookingRepo,
+		eventRepo:      eventRepo,
+		tx:             tx,
+		listingGateway: listingGateway,
 	}
 }
 
@@ -31,9 +33,15 @@ const (
 // todo  для создания  брони необходимо проверять наличие пользователя и объявления в других сервисах, например цену за 1 сутки
 //  Получать инфу, считать общий прайс в бизнес логике.
 //  Проверять наличие пользователя, его права, персональную скидку
+//  Из сервиса  listing приходит моделька, в ней есть минимальная длительность брони, учесть в проверке dateFrom/dateTo. Пример 3 дня, если  длительность брони 2 дня, то ошибка
 
 func (b *Booking) CreateBooking(ctx context.Context, createBookingCommand command.CreateBookingCommand) (*query.BookingResult, error) {
 	var bookingSnap domain.BookingSnapshot
+	listing, gateErr := b.listingGateway.GetListing(ctx, createBookingCommand.ListingID)
+	if gateErr != nil {
+		return nil, fmt.Errorf("[%s] get listing from external service error: %w", op, gateErr)
+	}
+
 	err := b.tx.Run(ctx, func(ctx context.Context) error {
 
 		domainBooking, err := domain.NewBooking(
@@ -43,6 +51,7 @@ func (b *Booking) CreateBooking(ctx context.Context, createBookingCommand comman
 			createBookingCommand.DateTo,
 			time.Now().UTC().Add(3*time.Hour), // todo че делать с этим
 		)
+
 		if err != nil {
 			return fmt.Errorf("[%s] create booking error  %w", op, err)
 		}
@@ -55,6 +64,18 @@ func (b *Booking) CreateBooking(ctx context.Context, createBookingCommand comman
 		if hasOverlap {
 			return apperr.BookingAlreadyExistsErr
 		}
+
+		err = domainBooking.ValidateMinimalBookingDuration(listing.MinimumBookingDuration)
+		if err != nil {
+			return err
+		}
+
+		err = domainBooking.CalculatePrice(listing.Price, listing.MinimumBookingDuration)
+		if err != nil {
+			return err
+		}
+
+		err = b.bookingRepo.LockListing(ctx, domainBooking.ListingID())
 
 		err = b.bookingRepo.CreateBooking(ctx, domainBooking)
 
